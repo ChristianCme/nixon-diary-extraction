@@ -1,0 +1,23 @@
+---
+title: "nixon-diary-extraction"
+output: html_document
+date: '2022-05-21'
+---
+
+```{r}
+library(pdftools)
+library(stringr)
+library(tesseract)
+```
+
+## Extract Text
+
+```{r}
+txt_69 <- pdf_ocr_text("1969 Presidential Daily Diary.pdf")
+txt_69 <- str_squish(txt_69)
+```
+
+```{r}
+head(txt_69)
+```
+
