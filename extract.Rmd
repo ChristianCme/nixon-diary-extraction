@@ -13,11 +13,26 @@ library(tesseract)
 ## Extract Text
 
 ```{r}
-txt_69 <- pdf_ocr_text("1969 Presidential Daily Diary.pdf")
-txt_69 <- str_squish(txt_69)
+txt_69 <- pdf_ocr_text("1969 Presidential Daily Diary.pdf", pages=c(1,2,3,4,5))
 ```
 
 ```{r}
-head(txt_69)
+#txt_69 <- str_squish(txt_69)
+```
+
+
+```{r}
+txt_69[2]
+```
+
+```{r}
+txt_69_default <- pdf_text("1969 Presidential Daily Diary.pdf")
+```
+```{r}
+str_replace_all(txt_69_default[2], "\\h+", " ")
+```
+
+```{r}
+library(tabulizer)
 ```
 
