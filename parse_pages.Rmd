@@ -1,0 +1,31 @@
+---
+title: "parse_pages"
+output: html_document
+date: '2022-05-30'
+---
+
+```{r}
+library(tidyverse)
+library(pdftools)
+library(anytime)
+source("~/Projects/nixon-diary-extraction/functions.R")
+```
+
+```{r}
+raw.1969 <- read_rds("1969.rds")
+raw.1970 <- read_rds("1970.rds")
+raw.1971 <- read_rds("1971.rds")
+raw.1972 <- read_rds("1972.rds")
+raw.1973 <- read_rds("1973.rds")
+raw.1974 <- read_rds("1974.rds")
+```
+
+
+
+Appendix pages are incredibly nonstandard. Extracting data from those manually doesn't seem doable.
+
+
+```{r}
+diary.1969 <- create.doc.lists(raw.1969, generate_toc("1969 Presidential Daily Diary.pdf"))
+```
+

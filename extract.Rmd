@@ -5,34 +5,17 @@ date: '2022-05-21'
 ---
 
 ```{r}
-library(pdftools)
-library(stringr)
-library(tesseract)
+library(tidyverse)
 ```
 
-## Extract Text
+## Load Pages
 
 ```{r}
-txt_69 <- pdf_ocr_text("1969 Presidential Daily Diary.pdf", pages=c(1,2,3,4,5))
-```
-
-```{r}
-#txt_69 <- str_squish(txt_69)
-```
-
-
-```{r}
-txt_69[2]
-```
-
-```{r}
-txt_69_default <- pdf_text("1969 Presidential Daily Diary.pdf")
-```
-```{r}
-str_replace_all(txt_69_default[2], "\\h+", " ")
-```
-
-```{r}
-library(tabulizer)
+1969_raw <- read_rds("1969.rds")
+1970_raw <- read_rds("1970.rds")
+1971_raw <- read_rds("1971.rds")
+1972_raw <- read_rds("1972.rds")
+1973_raw <- read_rds("1973.rds")
+1974_raw <- read_rds("1974.rds")
 ```
 
