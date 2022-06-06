@@ -27,8 +27,12 @@ Appendix pages are incredibly nonstandard. Extracting data from those manually d
 
 ```{r}
 toc_1969 <- build_toc("1969 Presidential Daily Diary.pdf")
+toc_1970 <- build_toc("1970 Presidential Daily Diary.pdf")
+toc_1971 <- build_toc("1971 Presidential Daily Diary.pdf")
+toc_1972 <- build_toc("1972 Presidential Daily Diary.pdf")
+toc_1973 <- build_toc("1973 Presidential Daily Diary.pdf")
+toc_1974 <- build_toc("1974 Presidential Daily Diary.pdf")
 ```
-
 
 
 ```{r}
