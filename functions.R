@@ -56,11 +56,12 @@ generate_toc <- function(filename) {
   return(toc)
 }
 
+get.level <- function(x) x[[1]]
+
 build_toc <- function(filename) {
-  toc_py <- py$get_bookmarks("1969 Presidential Daily Diary.pdf")
-  get.level <- function(x) x[[1]]
+  toc_py <- py$get_bookmarks(filename)
   toc_py <- toc_py[lapply(toc_py, get.level) != 1]
-  toc_r <- generate_toc("1969 Presidential Daily Diary.pdf")
+  toc_r <- generate_toc(filename)
   #Replace title with R title
   for (i in 1:length(toc_py)) toc_py[[i]][[2]] <-  toc_r[[i]]
   return(toc_py)
@@ -69,45 +70,49 @@ build_toc <- function(filename) {
 
 
 create.doc.lists <- function(raw.data, toc) {
-  doc.list <- vector("list", length = length(toc))
-  page_count <- 1
-  for (i in 1:500) {
-    if (!str_detect(toc[[i]], "Appendix") & !str_detect(toc[[i]], "Withdrawal")) {
-      print(paste(i, page_count, toc[[i]],
-                              is.same.date(toc[[i]], raw.data[page_count], debug = TRUE)[[2]], 
-                              is.same.date(toc[[i]], raw.data[page_count], debug = TRUE)[[3]]))
+  #Get pages under each item
+  for (i in 1:length(toc)) {
+    if (i != length(toc)) {
+      #Get all the pages between sections
+      page_list <- head(toc[[i]][[3]]:toc[[i+1]][[3]], -1)
+      toc[[i]][["pages"]] <-  raw.data[page_list]
     }
-    #Catch doc withdrawals
-    if (str_detect(toc[[i]], "Document Withdrawal Record")) {
-      doc.list[[i]] <- list(name = toc[[i]], text = raw.data[page_count])
-      page_count <- page_count + 1
-    }
-    #diary pages
-    else if (!str_detect(toc[[i]], "Appendix")){
-      doc.list[[i]] <- list(name = toc[[i]], pages = list(raw.data[page_count]))
-      page_count <- page_count + 1
-      while (is.diary(raw.data[page_count]) & is.same.date(toc[[i]], raw.data[page_count])) {
-        #print(paste(i, page_count, is.same.date(toc[[i]], raw.data[(page_count)])))
-        append(doc.list[[i]]$pages, list(raw.data[page_count]))
-        page_count <- page_count + 1
-      }
-    }
-    #Create sub-list if appendix A and add all appendix pages
-    else if (str_detect(toc[[i]], "Appendix A")) {
-      doc.list[[i - 1]]$appendicies <- list(raw.data[page_count])
-      page_count <- page_count + 1
-      last_appendix <- i
-      while (!is.diary(raw.data[page_count]) & !is.withdrawal(raw.data[page_count])) {
-        append(doc.list[[i]]$appendicies, list(raw.data[page_count]))
-        page_count <- page_count + 1
-      }
-    }
-    #append appendix
     else {
-      append(doc.list[[last_appendix]]$appendicies, list(raw.data[page_count]))
-      page_count <- page_count + 1
+      page_list <- (toc[[i]][[3]]:length(raw.data))
+      toc[[i]][["pages"]] <-  raw.data[page_list]
     }
   }
   
-  return(doc.list)
+  #Get appendices under the correct date
+  for (i in 1:length(toc)) {
+    if (toc[[i]][[1]] == 3) {
+      #Look backwards to find parent
+      parent_index <- i-1
+      while (toc[[parent_index]][[1]] != 2) {
+        parent_index <- parent_index - 1
+      }
+      #Made Appendix list if doesn't exist
+      if (!("appendices" %in% names(toc[[parent_index]]))) {
+        toc[[parent_index]][["appendicies"]] <- list(A = toc[[i]][["pages"]])
+      }
+      else{
+        letter <- str_sub(toc[[i]][[2]], -1)
+        toc[[parent_index]][["appendices"]][[letter]] <- toc[[i]][["pages"]]
+      }
+    }
+  }
+  
+  #Delete appendix entries 
+  toc <- toc[lapply(toc, get.level) != 3]
+  
+  #Delete level number
+  toc <- lapply(toc, function(x) (x <- x[-1]))
+  
+  #Rename sublist items
+  toc <- lapply(toc, function(x) {names(x)[c(1,2)] <- c("date", "page.number"); x})
+  
+  #Rename list items
+  names(toc) <- lapply(toc, function(x) x[["date"]])
+  
+  return(toc)
 }

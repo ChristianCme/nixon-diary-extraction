@@ -36,6 +36,11 @@ toc_1974 <- build_toc("1974 Presidential Daily Diary.pdf")
 
 
 ```{r}
-diary.1969 <- create.doc.lists(raw.1969, generate_toc("1969 Presidential Daily Diary.pdf"))
+diary.1969 <- create.doc.lists(raw.1969, toc_1969)
+diary.1970 <- create.doc.lists(raw.1970, toc_1970)
+diary.1971 <- create.doc.lists(raw.1971, toc_1971)
+diary.1972 <- create.doc.lists(raw.1972, toc_1972)
+diary.1973 <- create.doc.lists(raw.1973, toc_1973)
+diary.1974 <- create.doc.lists(raw.1974, toc_1974)
 ```
 
