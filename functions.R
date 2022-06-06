@@ -1,3 +1,4 @@
+source_python("functions.py")
 
 is.withdrawal <- function(text) {
   return(str_detect(text, "DOCUMENT WITHDRAWAL RECORD"))
@@ -54,6 +55,17 @@ generate_toc <- function(filename) {
   
   return(toc)
 }
+
+build_toc <- function(filename) {
+  toc_py <- py$get_bookmarks("1969 Presidential Daily Diary.pdf")
+  get.level <- function(x) x[[1]]
+  toc_py <- toc_py[lapply(toc_py, get.level) != 1]
+  toc_r <- generate_toc("1969 Presidential Daily Diary.pdf")
+  #Replace title with R title
+  for (i in 1:length(toc_py)) toc_py[[i]][[2]] <-  toc_r[[i]]
+  return(toc_py)
+}
+
 
 
 create.doc.lists <- function(raw.data, toc) {

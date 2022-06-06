@@ -1,6 +1,5 @@
 ---
 title: "parse_pages"
-output: html_document
 date: '2022-05-30'
 ---
 
@@ -8,6 +7,9 @@ date: '2022-05-30'
 library(tidyverse)
 library(pdftools)
 library(anytime)
+library(reticulate)
+use_condaenv("pdf_extract")
+source_python("functions.py")
 source("~/Projects/nixon-diary-extraction/functions.R")
 ```
 
@@ -20,9 +22,13 @@ raw.1973 <- read_rds("1973.rds")
 raw.1974 <- read_rds("1974.rds")
 ```
 
-
-
 Appendix pages are incredibly nonstandard. Extracting data from those manually doesn't seem doable.
+
+
+```{r}
+toc_1969 <- build_toc("1969 Presidential Daily Diary.pdf")
+```
+
 
 
 ```{r}
