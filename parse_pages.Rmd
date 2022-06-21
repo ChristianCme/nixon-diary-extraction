@@ -44,3 +44,24 @@ diary.1973 <- create.doc.lists(raw.1973, toc_1973)
 diary.1974 <- create.doc.lists(raw.1974, toc_1974)
 ```
 
+The colon is sometimes recognized as a 3. Also sometimes "10:xx" becomes "0:xx". Write time validation function after processing. There's 1 - 3 characters between times. Also
+
+```{r}
+test <- diary.1971$`April 19, 1971`$pages[2]
+test_split <- str_split(test, '\\n')[[1]]
+time_pattern <- '[:digit:]{1,2}[:graph:]+[:digit:]{2}'
+call_pattern <- '(?<=[:blank:]|[:symbol:]|[:punct:])(P|R)(?=[:blank:]|[:symbol:]|[:punct:])'
+str_extract_all(test_split[38], time_pattern)
+str_extract_all(test_split[27], call_pattern)
+
+```
+
+Steps:
+Find the first line item
+get time, P|R, rest of text
+while next line not new item, append
+
+
+TODO:
+Store whole dataframe in diary object
+Write Time validation logic 
