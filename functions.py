@@ -8,7 +8,7 @@ def get_bookmarks(filepath: str) -> Dict[int, str]:
     # WARNING! One page can have multiple bookmarks!
     bookmarks = {}
     with fitz.open(filepath) as doc:
-        toc = doc.getToC()  # [[lvl, title, page, …], …]
+        toc = doc.get_toc()  # [[lvl, title, page, …], …]
         for level, title, page in toc:
             bookmarks[page] = title
     return toc
