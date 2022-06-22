@@ -116,3 +116,52 @@ create.doc.lists <- function(raw.data, toc) {
   
   return(toc)
 }
+
+time_pattern <- '[:digit:]{1,2}[:graph:]+([:digit:]|[:symbol:]|[:punct:]){2}'
+call_pattern <- '(?<=[:blank:]|[:symbol:]|[:punct:])(P|R)(?=[:blank:]|[:symbol:]|[:punct:])'
+
+
+build_data_frame <- function(date, pages) {
+  date_df <- as.matrix(data.frame(date = character(),
+                                  time_in = character(),
+                                  time_out = character(),
+                                  phone = character(),
+                                  activity = character()
+  ))
+  page_num <- 1
+  for (page in pages) {
+    page_split <- str_split(page, '\\n')[[1]]
+    #find start of diary entries to avoid time in title of page
+    start <- 1
+    while (!str_starts(page_split[start], time_pattern)) {
+      start <- start + 1
+    }
+    #Extract times, phone, activity
+    for (line_num in start:length(page_split)) {
+      times <- str_extract_all(page_split[line_num], time_pattern)[[1]]
+      #start new entry
+      if (!identical(times, character(0))) {
+        phone <- str_extract(page_split[line_num], call_pattern)
+        #Find activity start
+        if (!is.na(phone)) {
+          activity <- str_sub(page_split[line_num], str_locate(page_split[line_num], call_pattern)[,'end'] + 1)
+        }
+        else {
+          pos <- as.data.frame(str_locate_all(page_split[line_num], time_pattern))
+          activity <- str_sub(page_split[line_num], pos$end[length(pos$end)] + 1)
+        }
+        
+        date_df <- rbind(date_df, c(date, times[1], times[2], phone, activity))
+        
+      }
+      #append to previous entry
+      else{
+        date_df[length(date_df)] <- paste(date_df[length(date_df)], page_split[line_num])
+      }
+    }
+    page_num <- page_num + 1
+  }
+  
+  return(date_df)
+}
+
