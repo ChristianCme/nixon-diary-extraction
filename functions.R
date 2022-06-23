@@ -117,8 +117,8 @@ create.doc.lists <- function(raw.data, toc) {
   return(toc)
 }
 
-time_pattern <- '[:digit:]{1,2}[:graph:]+([:digit:]|[:symbol:]|[:punct:]){2}'
-call_pattern <- '(?<=[:blank:]|[:symbol:]|[:punct:])(P|R)(?=[:blank:]|[:symbol:]|[:punct:])'
+time_pattern <- '[:digit:]{1,2}[:graph:]+[[:digit:][:symbol:][:punct:]]{2}'
+call_pattern <- '(?<=[:blank:]|[:symbol:]|[:punct:])[PR](?=[:blank:]|[:symbol:]|[:punct:])'
 
 
 build_data_frame <- function(date, pages) {
