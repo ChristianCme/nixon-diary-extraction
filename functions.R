@@ -68,55 +68,6 @@ build_toc <- function(filename) {
 }
 
 
-
-create.doc.lists <- function(raw.data, toc) {
-  #Get pages under each item
-  for (i in 1:length(toc)) {
-    if (i != length(toc)) {
-      #Get all the pages between sections
-      page_list <- head(toc[[i]][[3]]:toc[[i+1]][[3]], -1)
-      toc[[i]][["pages"]] <-  raw.data[page_list]
-    }
-    else {
-      page_list <- (toc[[i]][[3]]:length(raw.data))
-      toc[[i]][["pages"]] <-  raw.data[page_list]
-    }
-  }
-  
-  #Get appendices under the correct date
-  for (i in 1:length(toc)) {
-    if (toc[[i]][[1]] == 3) {
-      #Look backwards to find parent
-      parent_index <- i-1
-      while (toc[[parent_index]][[1]] != 2) {
-        parent_index <- parent_index - 1
-      }
-      #Made Appendix list if doesn't exist
-      if (!("appendices" %in% names(toc[[parent_index]]))) {
-        toc[[parent_index]][["appendicies"]] <- list(A = toc[[i]][["pages"]])
-      }
-      else{
-        letter <- str_sub(toc[[i]][[2]], -1)
-        toc[[parent_index]][["appendices"]][[letter]] <- toc[[i]][["pages"]]
-      }
-    }
-  }
-  
-  #Delete appendix entries 
-  toc <- toc[lapply(toc, get.level) != 3]
-  
-  #Delete level number
-  toc <- lapply(toc, function(x) (x <- x[-1]))
-  
-  #Rename sublist items
-  toc <- lapply(toc, function(x) {names(x)[c(1,2)] <- c("date", "page.number"); x})
-  
-  #Rename list items
-  names(toc) <- lapply(toc, function(x) x[["date"]])
-  
-  return(toc)
-}
-
 time_pattern <- '[:digit:]{1,2}[[:graph:][:blank:]]{0,3}[[:digit:][:symbol:][:punct:]]{2}'
 call_pattern <- '(?<=[:blank:]|[:symbol:]|[:punct:])[PR](?=[:blank:]|[:symbol:]|[:punct:]|p)'
 
@@ -136,9 +87,14 @@ build_data_frame <- function(date, pages, debug=FALSE) {
     }
     #find start of diary entries to make appending easier
     start <- 1
-    while (!str_starts(page_split[start], time_pattern)) {
+    while (!str_starts(page_split[start], time_pattern) & start<length(page_split)) {
       start <- start + 1
     }
+    
+    if (start == length(page_split)) {
+      next
+    }
+    
     #Extract times, phone, activity
     for (line_num in start:length(page_split)) {
       #time time call
@@ -186,3 +142,58 @@ build_data_frame <- function(date, pages, debug=FALSE) {
   return(date_df)
 }
 
+create.doc.lists <- function(raw.data, toc) {
+  #Get pages under each item
+  for (i in 1:length(toc)) {
+    if (i != length(toc)) {
+      #Get all the pages between sections
+      page_list <- head(toc[[i]][[3]]:toc[[i+1]][[3]], -1)
+      toc[[i]][["pages"]] <-  raw.data[page_list]
+    }
+    else {
+      page_list <- (toc[[i]][[3]]:length(raw.data))
+      toc[[i]][["pages"]] <-  raw.data[page_list]
+    }
+  }
+  
+  #Get appendices under the correct date
+  for (i in 1:length(toc)) {
+    if (toc[[i]][[1]] == 3) {
+      #Look backwards to find parent
+      parent_index <- i-1
+      while (toc[[parent_index]][[1]] != 2) {
+        parent_index <- parent_index - 1
+      }
+      #Made Appendix list if doesn't exist
+      if (!("appendices" %in% names(toc[[parent_index]]))) {
+        toc[[parent_index]][["appendicies"]] <- list(A = toc[[i]][["pages"]])
+      }
+      else{
+        letter <- str_sub(toc[[i]][[2]], -1)
+        toc[[parent_index]][["appendices"]][[letter]] <- toc[[i]][["pages"]]
+      }
+    }
+  }
+  
+  #Delete appendix entries 
+  toc <- toc[lapply(toc, get.level) != 3]
+  
+  #Delete level number
+  toc <- lapply(toc, function(x) (x <- x[-1]))
+  
+  #Rename sublist items
+  toc <- lapply(toc, function(x) {names(x)[c(1,2)] <- c("date", "page.number"); x})
+  
+  #Rename list items
+  names(toc) <- lapply(toc, function(x) x[["date"]])
+  
+  pb <- txtProgressBar(0, length(toc), style = 3)
+  for (i in 1:length(toc)) {
+    if (str_sub(toc[[i]][['date']], 1, 1) != '0') {
+      setTxtProgressBar(pb, i)
+      toc[[i]] <- append(toc[[i]], list(data_frame = build_data_frame(toc[[i]][['date']], toc[[i]][["pages"]])))
+    }
+  }
+  
+  return(toc)
+}

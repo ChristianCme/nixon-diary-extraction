@@ -52,8 +52,6 @@ test_split <- str_split(test, '\\n')[[1]]
 
 
 
-
-
 ```{r}
 test_df <- build_data_frame("April 17, 1971", diary.1971$`April 17, 1971`$pages)
 ```
@@ -64,9 +62,9 @@ test_df <- build_data_frame("July 27, 1969", diary.1969$`July 27, 1969`$pages, d
 
 
 
+
 TODO:
-Fix the phone regex capturing the P in people's names
-Store whole dataframe in diary object
+Drop | and p and numbers at beginning of activities
 Deal with items where there's just a line that is "The President:" and the next item is just names of meetings
 Write Time validation logic 
 Drop "The PResident Met with:" At end of lines
