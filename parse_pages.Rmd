@@ -43,12 +43,11 @@ diary.1973 <- create.doc.lists(raw.1973, toc_1973)
 diary.1974 <- create.doc.lists(raw.1974, toc_1974)
 ```
 
-The colon is sometimes recognized as a 3. Also sometimes "10:xx" becomes "0:xx". Write time validation function after processing. There's 1 - 3 characters between times. Also
 
 ```{r}
 test <- diary.1971$`April 17, 1971`$pages[1]
 test_split <- str_split(test, '\\n')[[1]]
-str_match(test_split[29], paste0("(", time_pattern, ")", "\\D*", "(", time_pattern, ")", "\\W*", "(", call_pattern, ")", "\\W*"))
+ str_match(test_split[39], paste0("(", time_pattern, ")", "\\D*", "(", time_pattern, ")", "\\W*", "(", call_pattern, ")", "\\W*"))
 ```
 
 
@@ -59,11 +58,10 @@ str_match(test_split[29], paste0("(", time_pattern, ")", "\\D*", "(", time_patte
 test_df <- build_data_frame("April 17, 1971", diary.1971$`April 17, 1971`$pages)
 ```
 
+```{r}
+test_df <- build_data_frame("July 27, 1969", diary.1969$`July 27, 1969`$pages, debug = TRUE)
+```
 
-Steps:
-Find the first line item (str_starts)
-get time, P|R, rest of text
-while next line not new item, append
 
 
 TODO:
