@@ -21,7 +21,6 @@ raw.1973 <- read_rds("1973.rds")
 raw.1974 <- read_rds("1974.rds")
 ```
 
-Appendix pages are incredibly nonstandard. Extracting data from those manually doesn't seem doable.
 
 
 ```{r}
@@ -43,28 +42,30 @@ diary.1973 <- create.doc.lists(raw.1973, toc_1973)
 diary.1974 <- create.doc.lists(raw.1974, toc_1974)
 ```
 
-
 ```{r}
-test <- diary.1971$`April 17, 1971`$pages[1]
-test_split <- str_split(test, '\\n')[[1]]
- str_match(test_split[39], paste0("(", time_pattern, ")", "\\D*", "(", time_pattern, ")", "\\W*", "(", call_pattern, ")", "\\W*"))
+all_items <- c(diary.1969, diary.1970, diary.1971, diary.1972, diary.1973, diary.1974)
+all_items <- do.call(c, all_items)
+all_items <- all_items[str_ends(names(all_items), 'data_frame')]
+all_items <- data.frame(do.call("rbind", all_items))
+all_items$activity <- str_trim(all_items$activity)
+all_items$activity <- str_squish(all_items$activity)
+all_items$activity <- str_remove_all(all_items$activity, '^[^[:alpha:]]+')
+all_items$activity <- str_remove_all(all_items$activity, '[\\|—\\-!=><_:]')
+all_items <- all_items[!(all_items$activity==""), ]
+all_items <- all_items[!grepl( "—", all_items$time_in, fixed=TRUE), ]
+all_items <- all_items[(nchar(all_items$activity) < 6 & !grepl( "press", all_items$activity, ignore.case = TRUE)), ]
+#If proper time stamp exists, replace string with that otherwise leave as is
+only_time <- function(x) ifelse(identical((t <- str_extract_all(x, "[:digit:]{1,2}:[:digit:]{2}")[[1]]), character(0)), x, t)
+all_items$time_in <- sapply(all_items$time_in, only_time)
 ```
 
-
-
-```{r}
-test_df <- build_data_frame("April 17, 1971", diary.1971$`April 17, 1971`$pages)
-```
-
-```{r}
-test_df <- build_data_frame("July 27, 1969", diary.1969$`July 27, 1969`$pages, debug = TRUE)
-```
 
 
 
 
 TODO:
+Fix time_out hour being in time_in
+Fix 3s instead of colons 
 Drop | and p and numbers at beginning of activities
 Deal with items where there's just a line that is "The President:" and the next item is just names of meetings
-Write Time validation logic 
-Drop "The PResident Met with:" At end of lines
+Drop "The President Met with:" At end of lines
