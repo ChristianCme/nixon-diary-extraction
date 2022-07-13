@@ -8,6 +8,7 @@ library(tidyverse)
 library(pdftools)
 library(anytime)
 library(reticulate)
+library(lubridate)
 source_python("functions.py")
 source("~/Projects/nixon-diary-extraction/functions.R")
 ```
@@ -47,25 +48,73 @@ all_items <- c(diary.1969, diary.1970, diary.1971, diary.1972, diary.1973, diary
 all_items <- do.call(c, all_items)
 all_items <- all_items[str_ends(names(all_items), 'data_frame')]
 all_items <- data.frame(do.call("rbind", all_items))
-all_items$activity <- str_trim(all_items$activity)
-all_items$activity <- str_squish(all_items$activity)
-all_items$activity <- str_remove_all(all_items$activity, '^[^[:alpha:]]+')
-all_items$activity <- str_remove_all(all_items$activity, '[\\|—\\-!=><_:]')
-all_items <- all_items[!(all_items$activity==""), ]
-all_items <- all_items[!grepl( "—", all_items$time_in, fixed=TRUE), ]
-all_items <- all_items[(nchar(all_items$activity) < 6 & !grepl( "press", all_items$activity, ignore.case = TRUE)), ]
+
+all_items <- all_items %>% 
+  mutate(across(where(is.character), str_squish)) %>% 
+  mutate(activity = str_remove_all(activity, '^[^[:alpha:]]+')) %>% 
+  mutate(activity = str_remove_all(activity, '[\\|—\\-!=><_:]')) %>% 
+  filter(!(activity== "")) %>% 
+  filter(!grepl( "—", time_in, fixed=TRUE)) %>% 
+  #filters out junk characters
+  filter(!(nchar(activity) < 6 & !grepl( "press", activity, ignore.case = TRUE))) %>% 
+  #Filters out  accidental appendix grabs
+  filter(!is.na(mdy(date, quiet = TRUE))) %>% 
+  #Filters out mis-entries from printing office label
+  filter(!(str_detect(time_in, "^19[67][91234]$") & grepl("-", time_out, fixed = TRUE))) %>% 
+  filter(!str_detect(activity, "^[p|P]age"))
+
+#Fixes 3s instead of colons
+colon_3_check <- "(1[012]\\s*3[0-5][0-9])|([0-9]\\s*3[0-5][0-9])"
+colon_3_check_in <- (str_detect(all_items$time_in, colon_3_check))
+colon_3_check_out <- (str_detect(all_items$time_out, colon_3_check) & !is.na(all_items$time_out))
+str_sub(all_items$time_in[colon_3_check_in],
+        str_locate(all_items$time_in[colon_3_check_in], colon_3_check)[, 2] - 2,
+        str_locate(all_items$time_in[colon_3_check_in], colon_3_check)[, 2] - 2) <- ':'
+
+str_sub(all_items$time_out[colon_3_check_out],
+        str_locate(all_items$time_out[colon_3_check_out], colon_3_check)[, 2] - 2,
+        str_locate(all_items$time_out[colon_3_check_out], colon_3_check)[, 2] - 2) <- ':'
+
+all_items$time_in <- str_replace(all_items$time_in, " :|: ", ":")
+all_items$time_out <- str_replace(all_items$time_out, " :|: ", ":")
+
+
+
 #If proper time stamp exists, replace string with that otherwise leave as is
-only_time <- function(x) ifelse(identical((t <- str_extract_all(x, "[:digit:]{1,2}:[:digit:]{2}")[[1]]), character(0)), x, t)
+only_time <- function(x) ifelse(identical((t <- str_extract_all(x, "(1[012]:[0-5][0-9])|([0-9]:[0-5][0-9])")[[1]]), character(0)), x, t)
 all_items$time_in <- sapply(all_items$time_in, only_time)
+all_items$time_out <- sapply(all_items$time_out, only_time)
 ```
 
+
+
+
+```{r}
+#Correct lines
+strict_time <- "^(1[012]:[0-5][0-9])|([0-9]:[0-5][0-9])$"
+time_in_check <- str_detect(all_items$time_in, strict_time)
+time_out_check <- str_detect(all_items$time_out, strict_time) | is.na(all_items$time_out)
+phone_check <- str_detect(all_items$phone, "^P|R$") | is.na(all_items$phone)
+check <- time_in_check & time_out_check & phone_check
+nrow(all_items[(check), ])
+nrow(all_items[(check), ])/nrow(all_items)
+View(all_items[!(check), ])
+```
+
+
+
+
+```{r}
+View(all_items[str_detect(all_items$time_in, "^(1[012]:[0-5][0-9])|([0-9]:[0-5][0-9])$"), ])
+
+View(all_items[(str_detect(all_items$time_in, "[:digit:]{1,2}:[:space:]$") & !is.na(all_items$time_out)), ])
+```
 
 
 
 
 TODO:
 Fix time_out hour being in time_in
-Fix 3s instead of colons 
-Drop | and p and numbers at beginning of activities
+Fix years being recognized as times
 Deal with items where there's just a line that is "The President:" and the next item is just names of meetings
 Drop "The President Met with:" At end of lines
