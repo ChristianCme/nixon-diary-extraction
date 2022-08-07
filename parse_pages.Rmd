@@ -99,6 +99,9 @@ check <- time_in_check & time_out_check & phone_check
 nrow(all_items[(check), ])
 nrow(all_items[(check), ])/nrow(all_items)
 View(all_items[!(check), ])
+
+#There should be 2028 days, but only 2017 are represented in the dataset
+all_items %>% count(date)
 ```
 
 
